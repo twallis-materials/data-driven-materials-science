@@ -1,0 +1,4 @@
+# SEM source images are not distributed
+data/sem/*.jpg
+data/sem/*.jpeg
+data/sem/*.png
