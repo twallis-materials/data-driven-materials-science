@@ -96,11 +96,9 @@ data-driven-materials-science/
 │   └── 04_sem_microstructure_classification.ipynb
 │
 ├── data/
-│   ├── dielectric_composition_features.csv
-│   └── sem/
-│       └── README.md
-│
-└── figures/
+   ├── dielectric_composition_features.csv
+   └── sem/
+       └── README.md
 ```
 
 ---
