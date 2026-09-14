@@ -1,130 +1,83 @@
 # Data-Driven Materials Science
 
-Machine learning and data-driven workflows for materials prediction, composition-space analysis, and microstructure classification.
+Computational materials science workflows for composition-based machine learning, model validation across materials composition space, and microstructure image analysis.
 
-## Overview
+This repository focuses on a central question in materials informatics:
 
-This repository contains a collection of materials-informatics studies exploring how chemical composition and microstructural information can be used to classify, organize, and interpret materials data.
+> How reliably can data-driven models learn materials behaviour from limited descriptors, and how does their performance change when they are evaluated outside familiar regions of the data space?
 
-The projects originated from my training in **Data-Driven Materials Science at the Interdisciplinary Centre for Advanced Materials Simulation (ICAMS), Ruhr University Bochum**, and are being reorganized and updated as reproducible materials-informatics case studies.
-
-The repository covers two main case studies:
-
-1. **Composition-Based Materials Informatics** — an end-to-end workflow covering dataset selection, preprocessing, supervised machine learning, unsupervised learning, and model validation.
-2. **Deep Learning for Materials Characterization** — a computer-vision study using convolutional neural networks to classify scanning electron microscopy (SEM) images.
-
-The broader objective is to explore how data-driven methods can complement physics-based materials modelling and contribute to materials discovery, characterization, and optimization.
+The analyses combine materials descriptors, supervised and unsupervised learning, dimensionality reduction, group-aware validation, and convolutional neural networks.
 
 ---
 
-## Case Study I — Composition-Based Materials Informatics
+## Highlights
 
-This case study develops an end-to-end machine-learning workflow for composition-based materials analysis, beginning with raw materials data and progressing to predictive modelling, composition-space exploration, and model validation.
+### Composition-based materials classification
 
-The workflow is organized into three stages:
+A set of 118 elemental-fraction descriptors was generated from chemical compositions in the Matminer dielectric dataset and used to predict the `pot_ferroelectric` target.
 
-**Data Selection & Preprocessing → Supervised Learning → Composition-Space Analysis & Extrapolative Validation**
-
-### 1. Data Selection and Preprocessing
-
-The first stage establishes the materials dataset used throughout the composition-based studies.
-
-The workflow includes:
-
-- selection of a materials dataset
-- data cleaning and preprocessing
-- processing of chemical formulas
-- construction of composition-based features
-- preparation of target properties for machine learning
-- identification and treatment of unsuitable or constant features
-- generation of a consistent dataset for downstream analysis
-
-The processed dataset produced at this stage provides the input for both the supervised and unsupervised machine-learning studies.
-
-This step is treated as an integral part of the materials-informatics workflow because the reliability and physical meaning of subsequent machine-learning results depend strongly on data quality, feature construction, and target definition.
-
----
-
-### 2. Composition-Based Prediction of Ferroelectric Materials
-
-The second stage investigates whether chemical composition can be used to identify materials with potential ferroelectric behaviour.
-
-Multiple supervised machine-learning algorithms are compared, including:
+Five classification approaches were compared using stratified cross-validation:
 
 - Logistic Regression
-- Support Vector Machines
-- Random Forests
+- Support Vector Machine
+- Random Forest
 - Gradient Boosting
-- Neural Networks
+- Neural Network
 
-Model evaluation includes:
+The Random Forest produced the strongest performance:
 
-- cross-validation
-- accuracy
-- precision
-- recall
-- F1-score
-- ROC-AUC analysis
-- hyperparameter optimization
+| Metric | Cross-validated score |
+|---|---:|
+| ROC-AUC | **0.934 ± 0.016** |
+| Accuracy | **0.868 ± 0.020** |
+| F1 | **0.904 ± 0.014** |
+| Precision | **0.888 ± 0.021** |
+| Recall | **0.921 ± 0.023** |
 
-The study examines the predictive information contained in chemical composition while recognizing an important materials-science limitation: ferroelectric behaviour is not determined by composition alone.
+Feature analysis identified several composition descriptors that contribute strongly to the predictions. K was the highest-ranked descriptor under both random-forest and permutation importance, while Rb, Cs, Li, N, O, P, and Cu also appeared among influential features.
 
-Crystal structure, symmetry, phase stability, temperature, defects, processing history, and other physical factors can also influence ferroelectric behaviour.
-
-The project therefore provides both a machine-learning classification study and an example of the importance of physically informed interpretation of data-driven materials models.
+These rankings represent predictive associations within the dataset rather than direct physical mechanisms.
 
 ---
 
-### 3. Composition-Space Analysis and Unsupervised Learning
+### Generalization across composition space
 
-The third stage explores the structure of the materials dataset in chemical-composition space using unsupervised machine learning.
+Strong performance under random cross-validation does not necessarily imply equally strong predictions in less familiar chemical regions.
 
-Methods investigated include:
+To examine this, the composition descriptors were projected into a PCA representation and partitioned for group-aware validation.
 
-- dimensionality reduction
-- t-SNE visualization
-- clustering
-- DBSCAN
-- composition-space grouping
-- leave-one-group-out cross-validation
-- comparison of random and group-based validation
+Exploratory clustering showed weak separation and low stability, indicating that the dataset is better described as a heterogeneous, largely continuous composition space than as a small number of well-defined material classes.
 
-A particular focus is the distinction between **interpolation and extrapolation** in materials machine learning.
+The resulting partitions were therefore used as a stress test rather than interpreted as physical material families.
 
-Random cross-validation can place chemically similar materials in both the training and validation sets. This may provide an optimistic estimate of model performance when the ultimate objective is to predict materials in previously unexplored regions of composition space.
+| Metric | Stratified CV | Group-aware CV |
+|---|---:|---:|
+| ROC-AUC | **0.934 ± 0.016** | **0.855 ± 0.093** |
+| Accuracy | **0.868 ± 0.020** | **0.726 ± 0.070** |
+| F1 | **0.904 ± 0.014** | **0.808 ± 0.040** |
 
-Group-based validation provides an alternative way of examining how predictive models perform when evaluated on compositionally distinct groups of materials.
+The reduction in performance shows that prediction becomes more difficult when complete regions of composition space are withheld from training.
 
-The original study uses t-SNE and DBSCAN as exploratory tools for visualizing and identifying structure in composition space. In the updated workflow, these results are interpreted cautiously because distances and clusters in a low-dimensional t-SNE representation do not necessarily preserve the full geometry of the original high-dimensional composition space.
-
-This project therefore emphasizes not only model performance, but also the broader problem of **generalization and extrapolation in data-driven materials discovery**.
+This distinction between interpolation and extrapolation is particularly important when evaluating machine-learning models for materials discovery.
 
 ---
 
-## Case Study II — Deep Learning for Materials Characterization
+### SEM microstructure classification
 
-### 4. SEM Microstructure Classification
+A convolutional neural network was used to distinguish local texture patterns in three SEM images.
 
-This case study explores deep learning for the classification of scanning electron microscopy (SEM) images of metal-nitride thin films.
+Rather than relying only on a random patch split, the analysis also separates training and test patches spatially within each parent image.
 
-The workflow includes:
+| Validation strategy | Accuracy | Macro F1 |
+|---|---:|---:|
+| Random patch split | 0.973 | 0.973 |
+| Spatial holdout | **0.946** | **0.946** |
 
-- SEM image preprocessing
-- grayscale conversion
-- image patch generation
-- neural-network classification
-- convolutional neural networks (CNNs)
-- confusion-matrix analysis
-- precision, recall, accuracy, and F1-score evaluation
-- investigation of image-size effects on classification performance
+The reduction under spatial holdout illustrates how validation strategy affects apparent image-classification performance.
 
-The project demonstrates how computer-vision methods can extract microstructural information directly from experimental materials images.
+Because only one parent image is available for each class, these results demonstrate discrimination of local texture within the available images and should not be interpreted as performance on independent specimens.
 
-The current study is treated as a **proof-of-concept microstructure classification problem**.
-
-Because image patches can originate from the same parent SEM micrograph, random patch-level train/test splitting may lead to optimistic estimates of model generalization. A more rigorous assessment of transferability would require validation using independent micrographs or specimens.
-
-This limitation is explicitly considered as part of the scientific interpretation of the deep-learning results.
+The source SEM images are not distributed with this repository because redistribution rights have not been established.
 
 ---
 
@@ -132,9 +85,9 @@ This limitation is explicitly considered as part of the scientific interpretatio
 
 ```text
 data-driven-materials-science/
-│
 ├── README.md
 ├── requirements.txt
+├── .gitignore
 │
 ├── notebooks/
 │   ├── 01_data_selection_and_preprocessing.ipynb
@@ -142,130 +95,179 @@ data-driven-materials-science/
 │   ├── 03_composition_space_analysis.ipynb
 │   └── 04_sem_microstructure_classification.ipynb
 │
-├── src/
-│   ├── preprocessing.py
-│   ├── evaluation.py
-│   └── visualization.py
-│
 ├── data/
-│   └── README.md
+│   ├── dielectric_composition_features.csv
+│   └── sem/
+│       └── README.md
 │
-├── figures/
-│
-└── reports/
+└── figures/
 ```
 
 ---
 
-## Machine-Learning Methods
+## Analysis Workflow
 
-The repository covers several areas of machine learning and data analysis:
+### 01 — Data Selection and Preprocessing
 
-### Supervised Learning
+[`01_data_selection_and_preprocessing.ipynb`](notebooks/01_data_selection_and_preprocessing.ipynb)
 
+The Matminer dielectric dataset is converted into a reproducible composition-based representation.
+
+The workflow:
+
+- selects the target and relevant metadata;
+- converts chemical formulas into composition objects;
+- generates elemental-fraction descriptors;
+- checks missing values and descriptor consistency;
+- identifies zero-variance features;
+- exports the processed dataset for downstream modelling.
+
+The processed dataset contains:
+
+- **1,056 materials**
+- **118 elemental-fraction descriptors**
+- **55 zero-variance descriptors identified**
+- positive target fraction of approximately **0.671**
+
+Feature removal is deferred to the machine-learning pipeline so that preprocessing can be handled consistently during model validation.
+
+---
+
+### 02 — Ferroelectric Classification
+
+[`02_ferroelectric_classification.ipynb`](notebooks/02_ferroelectric_classification.ipynb)
+
+This notebook compares several classification algorithms using the same composition representation and stratified cross-validation.
+
+The analysis includes:
+
+- preprocessing within ML pipelines;
+- Logistic Regression;
+- Support Vector Machine;
+- Random Forest;
+- Gradient Boosting;
+- multilayer neural network;
+- ROC-AUC, F1, precision, recall, and accuracy;
+- random-forest hyperparameter search;
+- feature-importance analysis;
+- permutation importance.
+
+Additional random-forest tuning did not improve upon the baseline model, indicating that the strong baseline result was not dependent on finding a narrowly optimized parameter configuration.
+
+---
+
+### 03 — Generalization Across Materials Composition Space
+
+[`03_composition_space_generalization.ipynb`](notebooks/03_composition_space_generalization.ipynb)
+
+This analysis investigates whether predictive performance changes when chemically separated regions of the dataset are withheld.
+
+The workflow combines:
+
+- zero-variance filtering;
+- feature standardization;
+- principal-component analysis;
+- exploratory composition-space grouping;
+- cluster-quality and stability diagnostics;
+- leave-one-group-out validation;
+- comparison with ordinary stratified cross-validation.
+
+The exploratory groups show weak intrinsic separation and are therefore not interpreted as physical materials classes. Instead, they provide a reproducible partition for testing model sensitivity to changes in the represented composition domain.
+
+---
+
+### 04 — SEM Microstructure Classification
+
+[`04_sem_microstructure_classification.ipynb`](notebooks/04_sem_microstructure_classification.ipynb)
+
+This notebook applies a convolutional neural network to local SEM texture classification.
+
+The workflow includes:
+
+- grayscale image preprocessing;
+- patch extraction;
+- spatial train/test separation;
+- CNN training;
+- class-wise evaluation;
+- comparison between random-patch and spatial-holdout validation.
+
+The SEM source images are intentionally excluded from the public repository. The notebook focuses on the image-processing methodology and model evaluation without redistributing the original microscopy data.
+
+---
+
+## Methods
+
+The repository uses a combination of:
+
+**Materials informatics**
+- composition-based descriptors
+- elemental-fraction featurization
+- Matminer datasets
+
+**Machine learning**
 - Logistic Regression
 - Support Vector Machines
 - Random Forests
 - Gradient Boosting
-- Neural Networks
+- multilayer neural networks
+- convolutional neural networks
 
-### Unsupervised Learning
+**Model validation**
+- stratified cross-validation
+- group-aware validation
+- leave-one-group-out testing
+- hyperparameter search
+- permutation importance
 
-- Dimensionality Reduction
-- t-SNE
-- DBSCAN
-- Clustering
-- Composition-Space Exploration
-
-### Deep Learning
-
-- Artificial Neural Networks
-- Convolutional Neural Networks
-- Image Classification
-
-### Model Evaluation
-
-- Cross-Validation
-- Leave-One-Group-Out Validation
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- ROC-AUC
-- Confusion Matrices
-- Hyperparameter Optimization
+**Data analysis**
+- principal-component analysis
+- composition-space clustering
+- cluster stability analysis
+- scientific visualization
 
 ---
 
-## Computational Tools
+## Scientific Perspective
 
-The projects are primarily implemented in Python using scientific-computing and machine-learning tools including:
+Materials datasets often contain strong correlations between chemistry, structure, processing history, and measured properties. High predictive performance alone therefore does not establish that a model has learned a transferable materials relationship.
+
+The analyses in this repository place particular emphasis on validation strategy, domain coverage, and the distinction between interpolation and extrapolation.
+
+The composition-based models intentionally exclude crystal structure, symmetry, defects, processing conditions, and temperature. Their predictions should therefore be interpreted within the information content of the selected descriptors.
+
+---
+
+## Tools
 
 - Python
 - NumPy
 - pandas
 - Matplotlib
 - scikit-learn
-- TensorFlow / Keras
 - Matminer
-
----
-
-## Scientific Perspective
-
-Machine learning in materials science is most valuable when combined with physical understanding.
-
-My broader research background is in computational materials science, including:
-
-- materials thermodynamics and kinetics
-- phase-field modelling
-- CALPHAD
-- atomistic simulations
-- grain-boundary thermodynamics
-- segregation and interfacial phase transformations
-- multicomponent metallic systems
-- liquid-metal embrittlement
-- multiscale materials modelling
-
-I am particularly interested in connecting physics-based materials modelling with data-driven approaches.
-
-The long-term objective is to combine:
-
-**Physics-Based Modelling + Materials Informatics + Machine Learning + Materials Design**
-
-to accelerate the understanding, discovery, and optimization of materials for energy, structural, and sustainable engineering applications.
+- TensorFlow / Keras
+- Jupyter
 
 ---
 
 ## Current Development
 
-These projects originated from earlier Data-Driven Materials Science studies and are currently being reorganized and modernized for reproducibility and clearer scientific interpretation.
+The next stage of this work extends the same materials-informatics framework toward sequential materials discovery, including:
 
-Planned improvements include:
+- uncertainty-aware model selection;
+- active learning;
+- Bayesian optimization;
+- exploration–exploitation strategies;
+- closed-loop candidate selection.
 
-- modernized scikit-learn workflows
-- reproducible preprocessing pipelines
-- improved cross-validation strategies
-- feature-importance analysis
-- explainable machine learning
-- physically informed feature engineering
-- improved extrapolative validation
-- clearer uncertainty and limitation analysis
-
-Future extensions will explore:
-
-- active learning
-- Bayesian optimization
-- multi-objective materials optimization
-- autonomous materials discovery workflows
+The objective is to connect predictive materials modelling with workflows relevant to high-throughput and autonomous materials discovery.
 
 ---
 
 ## Author
 
-**Theophilus Wallis, PhD**
-
+**Theophilus Wallis, PhD**  
 Computational Materials Scientist  
 Berlin, Germany
 
-Research interests: computational materials science, multiscale materials modelling, materials thermodynamics, phase-field modelling, CALPHAD, atomistic simulation, materials informatics, and machine learning for materials research.
+Research interests include multiscale materials modelling, phase-field methods, CALPHAD-informed modelling, materials informatics, and AI/ML for materials discovery.
